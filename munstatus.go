@@ -52,46 +52,49 @@ func main() {
 
 	ticker := time.NewTicker(time.Minute)
 	quit := make(chan struct{})
-	select {
-		case <- ticker.C:
-			log.Print("Checking\n")
-			feed, err = munstatusparser.GetFeed()
-			if err != nil{
-				log.Fatal(err)
-				close(quit)
-			}
-			if feed.FeedItems[0].Description() != last{
-				d := feed.FeedItems[0].Description()
-				if len(d) > 140{
+	for{
+		select {
+			case <- ticker.C:
+				log.Print("Checking\n")
+				feed, err = munstatusparser.GetFeed()
+				if err != nil{
+					log.Fatal(err)
+					close(quit)
+				}
+				if feed.FeedItems[0].Description() != last{
+					d := feed.FeedItems[0].Description()
+					if len(d) > 140{
 
-					s := ShortenString(d, 134)
-					last := twitter.Tweet{ID:0}
+						s := ShortenString(d, 134)
+						last := twitter.Tweet{ID:0}
 
-					for i, v := range s{
-						fmt.Printf("%v (%v/%v)", v, i+1, len(s))
+						for i, v := range s{
+							fmt.Printf("%v (%v/%v)", v, i+1, len(s))
 
-						if last.ID == 0{
-							l, _, err := client.Statuses.Update(fmt.Sprintf("%v (%v/%v)", v, i+1, len(s)), nil)
-							if err != nil{
-								log.Fatal(err)
-								close(quit)
+							if last.ID == 0{
+								l, _, err := client.Statuses.Update(fmt.Sprintf("%v (%v/%v)", v, i+1, len(s)), nil)
+								if err != nil{
+									log.Fatal(err)
+									close(quit)
+								}
+								last = *l
+							} else{
+								params := twitter.StatusUpdateParams{InReplyToStatusID:last.ID}
+								l, _, err := client.Statuses.Update(fmt.Sprintf("%v (%v/%v)", v, i+1, len(s)), &params)
+								if err != nil{
+									log.Fatal(err)
+									close(quit)
+								}
+								last = *l
 							}
-							last = *l
-						} else{
-							params := twitter.StatusUpdateParams{InReplyToStatusID:last.ID}
-							l, _, err := client.Statuses.Update(fmt.Sprintf("%v (%v/%v)", v, i+1, len(s)), &params)
-							if err != nil{
-								log.Fatal(err)
-								close(quit)
-							}
-							last = *l
+
 						}
-
 					}
 				}
-			}
-		case <- quit:
-			ticker.Stop()
-			return
+			case <- quit:
+				ticker.Stop()
+				return
+		}
 	}
+
 }
