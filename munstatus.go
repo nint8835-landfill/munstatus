@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	last := feed.FeedItems[0].Description()
+	lastStatus := feed.FeedItems[0].Description()
 
 	config := oauth1.NewConfig(os.Getenv("TWITTER_CONSUMER_KEY"), os.Getenv("TWITTER_CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_SECRET"))
@@ -60,7 +60,7 @@ func main() {
 					log.Fatal(err)
 					close(quit)
 				}
-				if feed.FeedItems[0].Description() != last{
+				if feed.FeedItems[0].Description() != lastStatus{
 					d := feed.FeedItems[0].Description()
 					if len(d) > 140{
 
@@ -89,6 +89,7 @@ func main() {
 
 						}
 					}
+					lastStatus = feed.FeedItems[0].Description()
 				}
 			case <- quit:
 				ticker.Stop()
