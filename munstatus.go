@@ -55,7 +55,6 @@ func main() {
 	for{
 		select {
 			case <- ticker.C:
-				log.Print("Checking\n")
 				feed, err = munstatusparser.GetFeed()
 				if err != nil{
 					log.Fatal(err)
